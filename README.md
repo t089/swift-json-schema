@@ -103,22 +103,6 @@ let encoded = try encoder.encode(schema)
 print(String(data: encoded, encoding: .utf8)!)
 ```
 
-### Accessing Schema Properties
-
-```swift
-// Check schema type
-if let objectSchema = schema.object {
-    // Access object-specific properties
-    for (property, propertySchema) in objectSchema.properties {
-        print("Property: \(property), Type: \(propertySchema.type ?? "unknown")")
-    }
-}
-
-// Get schema description
-if let description = schema.description {
-    print("Schema description: \(description)")
-}
-```
 
 ## Supported Schema Types
 
@@ -201,7 +185,3 @@ JSONSchema.not(JSONSchema)
 Copyright (c) 2025 Tobias Haeberle
 
 Licensed under the Apache License, Version 2.0
-
-## Contributing
-
-Contributions are welcome! Please feel free to submit a Pull Request.
