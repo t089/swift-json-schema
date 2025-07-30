@@ -5,7 +5,7 @@ A type-safe Swift library for defining, reading, and modifying JSON Schema speci
 ## Overview
 
 JSONSchema provides a native Swift representation of JSON Schema, allowing you to:
-- Define schemas programmatically using a fluent API
+- Define schemas programmatically
 - Read and parse existing JSON Schema files
 - Modify and transform schemas
 - Full `Codable` support for seamless JSON serialization
