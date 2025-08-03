@@ -292,32 +292,54 @@ public struct JSONSchema: Codable, Equatable, Sendable {
 
     /// Creates a string schema with optional constraints.
     /// - Parameters:
+    ///   - title: Short title for the schema
     ///   - description: Human-readable description of the schema
+    ///   - default: Default string value
+    ///   - examples: Array of example values
+    ///   - const: Single allowed value (makes this an enum with one value)
     ///   - minLength: Minimum string length
     ///   - maxLength: Maximum string length
     ///   - pattern: Regular expression pattern the string must match
+    ///   - format: Format constraint (e.g., "email", "date", "uri")
     /// - Returns: A new string schema
     public static func string(
+        title: String? = nil,
         description: String? = nil,
+        default: String? = nil,
+        examples: [String]? = nil,
+        const: String? = nil,
         minLength: Int? = nil,
         maxLength: Int? = nil,
-        pattern: String? = nil
+        pattern: String? = nil,
+        format: String? = nil
     ) -> Self {
         JSONSchema(
             type: .string(
-                .init(description: description, minLength: minLength, maxLength: maxLength, pattern: pattern)
-            ),
+                .init(
+                    title: title,
+                    description: description,
+                    default: `default`,
+                    examples: examples,
+                    const: const,
+                    minLength: minLength,
+                    maxLength: maxLength,
+                    pattern: pattern,
+                    format: format
+                )
+            )
         )
     }
 
     /// Creates an object schema with property definitions.
     /// - Parameters:
+    ///   - title: Short title for the schema
     ///   - description: Human-readable description of the schema
     ///   - properties: Dictionary of property names to their schemas
     ///   - required: Array of property names that must be present
     ///   - additionalProperties: Schema for properties not explicitly defined
     /// - Returns: A new object schema
     public static func object(
+        title: String? = nil,
         description: String? = nil,
         properties: [String: JSONSchema],
         required: [String]? = nil,
@@ -326,6 +348,7 @@ public struct JSONSchema: Codable, Equatable, Sendable {
         JSONSchema(
             type: .object(
                 .init(
+                    title: title,
                     description: description,
                     properties: properties,
                     required: required,
@@ -337,18 +360,21 @@ public struct JSONSchema: Codable, Equatable, Sendable {
 
     /// Creates an enum schema with a fixed set of allowed string values.
     /// - Parameters:
+    ///   - title: Short title for the schema
     ///   - description: Human-readable description of the schema
     ///   - values: Array of allowed string values
     /// - Returns: A new enum schema
     public static func `enum`(
+        title: String? = nil,
         description: String? = nil,
         values: [String]
     ) -> Self {
-        JSONSchema(type: .enum(.init(description: description, values: values)))
+        JSONSchema(type: .enum(.init(title: title, description: description, values: values)))
     }
 
     /// Creates an array schema with item type and constraints.
     /// - Parameters:
+    ///   - title: Short title for the schema
     ///   - description: Human-readable description of the schema
     ///   - items: Schema that all array items must conform to
     ///   - minItems: Minimum number of items
@@ -356,6 +382,7 @@ public struct JSONSchema: Codable, Equatable, Sendable {
     ///   - uniqueItems: Whether all items must be unique
     /// - Returns: A new array schema
     public static func array(
+        title: String? = nil,
         description: String? = nil,
         items: JSONSchema,
         minItems: Int? = nil,
@@ -365,6 +392,7 @@ public struct JSONSchema: Codable, Equatable, Sendable {
         JSONSchema(
             type: .array(
                 .init(
+                    title: title,
                     description: description,
                     items: items,
                     minItems: minItems,
@@ -377,44 +405,125 @@ public struct JSONSchema: Codable, Equatable, Sendable {
 
     /// Creates an integer schema with optional range constraints.
     /// - Parameters:
+    ///   - title: Short title for the schema
     ///   - description: Human-readable description of the schema
+    ///   - default: Default integer value
+    ///   - examples: Array of example values
+    ///   - const: Single allowed value
     ///   - minimum: Minimum allowed value (inclusive)
     ///   - maximum: Maximum allowed value (inclusive)
+    ///   - exclusiveMinimum: Minimum allowed value (exclusive)
+    ///   - exclusiveMaximum: Maximum allowed value (exclusive)
+    ///   - multipleOf: Value must be a multiple of this number
     /// - Returns: A new integer schema
     public static func integer(
+        title: String? = nil,
         description: String? = nil,
+        default: Int? = nil,
+        examples: [Int]? = nil,
+        const: Int? = nil,
         minimum: Int? = nil,
-        maximum: Int? = nil
+        maximum: Int? = nil,
+        exclusiveMinimum: Int? = nil,
+        exclusiveMaximum: Int? = nil,
+        multipleOf: Int? = nil
     ) -> Self {
-        JSONSchema(type: .integer(.init(description: description, minimum: minimum, maximum: maximum)))
+        JSONSchema(
+            type: .integer(
+                .init(
+                    title: title,
+                    description: description,
+                    default: `default`,
+                    examples: examples,
+                    const: const,
+                    minimum: minimum,
+                    maximum: maximum,
+                    exclusiveMinimum: exclusiveMinimum,
+                    exclusiveMaximum: exclusiveMaximum,
+                    multipleOf: multipleOf
+                )
+            )
+        )
     }
 
     /// Creates a number schema for floating-point values with optional range constraints.
     /// - Parameters:
+    ///   - title: Short title for the schema
     ///   - description: Human-readable description of the schema
+    ///   - default: Default numeric value
+    ///   - examples: Array of example values
+    ///   - const: Single allowed value
     ///   - minimum: Minimum allowed value (inclusive)
     ///   - maximum: Maximum allowed value (inclusive)
+    ///   - exclusiveMinimum: Minimum allowed value (exclusive)
+    ///   - exclusiveMaximum: Maximum allowed value (exclusive)
+    ///   - multipleOf: Value must be a multiple of this number
     /// - Returns: A new number schema
     public static func number(
+        title: String? = nil,
         description: String? = nil,
+        default: Double? = nil,
+        examples: [Double]? = nil,
+        const: Double? = nil,
         minimum: Double? = nil,
-        maximum: Double? = nil
+        maximum: Double? = nil,
+        exclusiveMinimum: Double? = nil,
+        exclusiveMaximum: Double? = nil,
+        multipleOf: Double? = nil
     ) -> Self {
-        JSONSchema(type: .number(.init(description: description, minimum: minimum, maximum: maximum)))
+        JSONSchema(
+            type: .number(
+                .init(
+                    title: title,
+                    description: description,
+                    default: `default`,
+                    examples: examples,
+                    const: const,
+                    minimum: minimum,
+                    maximum: maximum,
+                    exclusiveMinimum: exclusiveMinimum,
+                    exclusiveMaximum: exclusiveMaximum,
+                    multipleOf: multipleOf
+                )
+            )
+        )
     }
 
     /// Creates a boolean schema that matches a boolean value.
-    /// - Parameter description: Human-readable description of the schema
+    /// - Parameters:
+    ///   - title: Short title for the schema
+    ///   - description: Human-readable description of the schema
+    ///   - default: Default boolean value
+    ///   - examples: Array of example values
+    ///   - const: Single allowed value
     /// - Returns: A new boolean schema.
-    public static func boolean(description: String? = nil) -> Self {
-        JSONSchema(type: .boolean(.init(description: description)))
+    public static func boolean(
+        title: String? = nil,
+        description: String? = nil,
+        default: Bool? = nil,
+        examples: [Bool]? = nil,
+        const: Bool? = nil
+    ) -> Self {
+        JSONSchema(
+            type: .boolean(
+                .init(
+                    title: title,
+                    description: description,
+                    default: `default`,
+                    examples: examples,
+                    const: const
+                )
+            )
+        )
     }
 
     /// Creates a null schema that matches a null value.
-    /// - Parameter description: Human-readable description of the schema
+    /// - Parameters:
+    ///   - title: Short title for the schema
+    ///   - description: Human-readable description of the schema
     /// - Returns: A new null schema.
-    public static func null(description: String? = nil) -> Self {
-        JSONSchema(type: .null(.init(description: description)))
+    public static func null(title: String? = nil, description: String? = nil) -> Self {
+        JSONSchema(type: .null(.init(title: title, description: description)))
     }
 
     /// Creates a schema that matches if any of the provided schemas match.
@@ -448,28 +557,48 @@ public struct JSONSchema: Codable, Equatable, Sendable {
         public enum _Type: String, Codable, Sendable { case string = "string" }
 
         public var type: _Type = .string
+        public var title: String?
         public var description: String?
+        public var `default`: String?
+        public var examples: [String]?
+        public var const: String?
         public var minLength: Int?
         public var maxLength: Int?
         public var pattern: String?
+        public var format: String?
 
         /// Initializes a new string schema with optional constraints.
         /// - Parameters:
+        ///   - title: Short title for the schema
         ///   - description: Human-readable description of the schema
+        ///   - default: Default string value
+        ///   - examples: Array of example values
+        ///   - const: Single allowed value (makes this an enum with one value)
         ///   - minLength: Minimum string length
         ///   - maxLength: Maximum string length
         ///   - pattern: Regular expression pattern the string must match
+        ///   - format: Format constraint (e.g., "email", "date", "uri")
         /// - Returns: A new string schema
         public init(
+            title: String? = nil,
             description: String? = nil,
+            default: String? = nil,
+            examples: [String]? = nil,
+            const: String? = nil,
             minLength: Int? = nil,
             maxLength: Int? = nil,
-            pattern: String? = nil
+            pattern: String? = nil,
+            format: String? = nil
         ) {
+            self.title = title
             self.description = description
+            self.default = `default`
+            self.examples = examples
+            self.const = const
             self.minLength = minLength
             self.maxLength = maxLength
             self.pattern = pattern
+            self.format = format
         }
     }
 
@@ -477,6 +606,7 @@ public struct JSONSchema: Codable, Equatable, Sendable {
     public struct ObjectSchema: Codable, Equatable, Sendable {
         public enum _Type: String, Codable, Sendable { case object = "object" }
         public var type: _Type = .object
+        public var title: String?
         public var description: String?
         public var properties: [String: JSONSchema]
         public var required: [String]?
@@ -484,16 +614,19 @@ public struct JSONSchema: Codable, Equatable, Sendable {
 
         /// Initializes a new object schema with property definitions.
         /// - Parameters:
+        ///   - title: Short title for the schema
         ///   - description: Human-readable description of the schema
         ///   - properties: Dictionary of property names to their schemas
         ///   - required: Array of property names that must be present
         ///   - additionalProperties: Schema for properties not explicitly defined
         public init(
+            title: String? = nil,
             description: String? = nil,
             properties: [String: JSONSchema],
             required: [String]? = nil,
             additionalProperties: JSONSchema? = nil
         ) {
+            self.title = title
             self.description = description
             self.properties = properties
             self.required = required
@@ -505,14 +638,17 @@ public struct JSONSchema: Codable, Equatable, Sendable {
     public struct EnumSchema: Codable, Equatable, Sendable {
         public enum _Type: String, Codable, Sendable { case `enum` = "enum" }
         public var type: _Type = .enum
+        public var title: String?
         public var description: String?
         public var values: [String]
 
         /// Initializes a new enum schema with a fixed set of allowed values.
         /// - Parameters:
+        ///   - title: Short title for the schema
         ///   - description: Human-readable description of the schema
         ///   - values: Array of allowed string values
-        public init(description: String? = nil, values: [String]) {
+        public init(title: String? = nil, description: String? = nil, values: [String]) {
+            self.title = title
             self.description = description
             self.values = values
         }
@@ -522,6 +658,7 @@ public struct JSONSchema: Codable, Equatable, Sendable {
     public struct ArraySchema: Codable, Equatable, Sendable {
         public enum _Type: String, Codable, Sendable { case array = "array" }
         public var type: _Type = .array
+        public var title: String?
         public var description: String?
         public var items: JSONSchema
         public var minItems: Int?
@@ -530,18 +667,21 @@ public struct JSONSchema: Codable, Equatable, Sendable {
 
         /// Initializes a new array schema with item type and constraints.
         /// - Parameters:
+        ///   - title: Short title for the schema
         ///   - description: Human-readable description of the schema
         ///   - items: Schema that all array items must conform to
         ///   - minItems: Minimum number of items
         ///   - maxItems: Maximum number of items
         ///   - uniqueItems: Whether all items must be unique
         public init(
+            title: String? = nil,
             description: String? = nil,
             items: JSONSchema,
             minItems: Int? = nil,
             maxItems: Int? = nil,
             uniqueItems: Bool? = nil
         ) {
+            self.title = title
             self.description = description
             self.items = items
             self.minItems = minItems
@@ -554,19 +694,51 @@ public struct JSONSchema: Codable, Equatable, Sendable {
     public struct IntegerSchema: Codable, Equatable, Sendable {
         public enum _Type: String, Codable, Sendable { case integer = "integer" }
         public var type: _Type = .integer
+        public var title: String?
         public var description: String?
+        public var `default`: Int?
+        public var examples: [Int]?
+        public var const: Int?
         public var minimum: Int?
         public var maximum: Int?
+        public var exclusiveMinimum: Int?
+        public var exclusiveMaximum: Int?
+        public var multipleOf: Int?
 
         /// Initializes a new integer schema with optional range constraints.
         /// - Parameters:
+        ///   - title: Short title for the schema
         ///   - description: Human-readable description of the schema
+        ///   - default: Default integer value
+        ///   - examples: Array of example values
+        ///   - const: Single allowed value
         ///   - minimum: Minimum allowed value (inclusive)
         ///   - maximum: Maximum allowed value (inclusive)
-        public init(description: String? = nil, minimum: Int? = nil, maximum: Int? = nil) {
+        ///   - exclusiveMinimum: Minimum allowed value (exclusive)
+        ///   - exclusiveMaximum: Maximum allowed value (exclusive)
+        ///   - multipleOf: Value must be a multiple of this number
+        public init(
+            title: String? = nil,
+            description: String? = nil,
+            default: Int? = nil,
+            examples: [Int]? = nil,
+            const: Int? = nil,
+            minimum: Int? = nil,
+            maximum: Int? = nil,
+            exclusiveMinimum: Int? = nil,
+            exclusiveMaximum: Int? = nil,
+            multipleOf: Int? = nil
+        ) {
+            self.title = title
             self.description = description
+            self.default = `default`
+            self.examples = examples
+            self.const = const
             self.minimum = minimum
             self.maximum = maximum
+            self.exclusiveMinimum = exclusiveMinimum
+            self.exclusiveMaximum = exclusiveMaximum
+            self.multipleOf = multipleOf
         }
     }
 
@@ -574,23 +746,51 @@ public struct JSONSchema: Codable, Equatable, Sendable {
     public struct NumberSchema: Codable, Equatable, Sendable {
         public enum _Type: String, Codable, Sendable { case number = "number" }
         public var type: _Type = .number
+        public var title: String?
         public var description: String?
+        public var `default`: Double?
+        public var examples: [Double]?
+        public var const: Double?
         public var minimum: Double?
         public var maximum: Double?
+        public var exclusiveMinimum: Double?
+        public var exclusiveMaximum: Double?
+        public var multipleOf: Double?
 
         /// Initializes a new number schema with optional range constraints.
         /// - Parameters:
+        ///   - title: Short title for the schema
         ///   - description: Human-readable description of the schema
+        ///   - default: Default numeric value
+        ///   - examples: Array of example values
+        ///   - const: Single allowed value
         ///   - minimum: Minimum allowed value (inclusive)
         ///   - maximum: Maximum allowed value (inclusive)
+        ///   - exclusiveMinimum: Minimum allowed value (exclusive)
+        ///   - exclusiveMaximum: Maximum allowed value (exclusive)
+        ///   - multipleOf: Value must be a multiple of this number
         public init(
+            title: String? = nil,
             description: String? = nil,
+            default: Double? = nil,
+            examples: [Double]? = nil,
+            const: Double? = nil,
             minimum: Double? = nil,
-            maximum: Double? = nil
+            maximum: Double? = nil,
+            exclusiveMinimum: Double? = nil,
+            exclusiveMaximum: Double? = nil,
+            multipleOf: Double? = nil
         ) {
+            self.title = title
             self.description = description
+            self.default = `default`
+            self.examples = examples
+            self.const = const
             self.minimum = minimum
             self.maximum = maximum
+            self.exclusiveMinimum = exclusiveMinimum
+            self.exclusiveMaximum = exclusiveMaximum
+            self.multipleOf = multipleOf
         }
     }
 
@@ -598,28 +798,52 @@ public struct JSONSchema: Codable, Equatable, Sendable {
     public struct BooleanSchema: Codable, Equatable, Sendable {
         public enum _Type: String, Codable, Sendable { case boolean = "boolean" }
         public var type: _Type = .boolean
+        public var title: String?
         public var description: String?
-        // No additional properties needed for boolean schema
+        public var `default`: Bool?
+        public var examples: [Bool]?
+        public var const: Bool?
 
         /// Initializes a new boolean schema.
-        /// - Parameter description: Human-readable description of the schema
+        /// - Parameters:
+        ///   - title: Short title for the schema
+        ///   - description: Human-readable description of the schema
+        ///   - default: Default boolean value
+        ///   - examples: Array of example values
+        ///   - const: Single allowed value
         public init(
-            description: String? = nil
-        ) { self.description = description }
+            title: String? = nil,
+            description: String? = nil,
+            default: Bool? = nil,
+            examples: [Bool]? = nil,
+            const: Bool? = nil
+        ) {
+            self.title = title
+            self.description = description
+            self.default = `default`
+            self.examples = examples
+            self.const = const
+        }
     }
 
     /// Schema for null values.
     public struct NullSchema: Codable, Equatable, Sendable {
         public enum _Type: String, Codable, Sendable { case null = "null" }
         public var type: _Type = .null
+        public var title: String?
         public var description: String?
-        // No additional properties needed for null schema
 
         /// Initializes a new null schema.
-        /// - Parameter description: Human-readable description of the schema
+        /// - Parameters:
+        ///   - title: Short title for the schema
+        ///   - description: Human-readable description of the schema
         public init(
+            title: String? = nil,
             description: String? = nil
-        ) { self.description = description }
+        ) {
+            self.title = title
+            self.description = description
+        }
     }
 
     /// Schema that matches if any of the provided schemas match.
