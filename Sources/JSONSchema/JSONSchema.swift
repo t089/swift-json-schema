@@ -84,7 +84,7 @@ public struct JSONSchema: Codable, Equatable, Sendable {
         switch _type {
         case .string: return StringSchema._Type.string.rawValue
         case .object: return ObjectSchema._Type.object.rawValue
-        case .enum: return EnumSchema._Type.`enum`.rawValue
+        case .enum(let enumSchema): return enumSchema.type
         case .array: return ArraySchema._Type.array.rawValue
         case .integer: return IntegerSchema._Type.integer.rawValue
         case .number: return NumberSchema._Type.number.rawValue
@@ -197,6 +197,11 @@ public struct JSONSchema: Codable, Equatable, Sendable {
         let container = try decoder.singleValueContainer()
         var errors: [any Error] = []
         do {
+            self._type = .enum(try container.decode(EnumSchema.self))
+            return
+        } catch { errors.append(error) }
+        
+        do {
             self._type = .string(try container.decode(StringSchema.self))
             return
         } catch { errors.append(error) }
@@ -206,10 +211,7 @@ public struct JSONSchema: Codable, Equatable, Sendable {
             return
         } catch { errors.append(error) }
 
-        do {
-            self._type = .enum(try container.decode(EnumSchema.self))
-            return
-        } catch { errors.append(error) }
+        
 
         do {
             self._type = .array(try container.decode(ArraySchema.self))
@@ -342,9 +344,16 @@ public struct JSONSchema: Codable, Equatable, Sendable {
     /// - Returns: A new enum schema
     public static func `enum`(
         description: String? = nil,
-        values: [String]
+        values: [any ConvertibleToJSONValue] = []
     ) -> Self {
         JSONSchema(type: .enum(.init(description: description, values: values)))
+    }
+
+    public static func `enum`(
+        description: String? = nil,
+        values: [String] = []
+    ) -> Self {
+        JSONSchema(type: .enum(.string(description: description, values: values)))
     }
 
     /// Creates an array schema with item type and constraints.
@@ -503,18 +512,28 @@ public struct JSONSchema: Codable, Equatable, Sendable {
 
     /// Schema for enumerated string values restricted to a specific set.
     public struct EnumSchema: Codable, Equatable, Sendable {
-        public enum _Type: String, Codable, Sendable { case `enum` = "enum" }
-        public var type: _Type = .enum
+        public var type: String?
         public var description: String?
-        public var values: [String]
+        public var values: [JSONValue]
 
         /// Initializes a new enum schema with a fixed set of allowed values.
         /// - Parameters:
         ///   - description: Human-readable description of the schema
         ///   - values: Array of allowed string values
-        public init(description: String? = nil, values: [String]) {
+        public init(description: String? = nil, values: [any ConvertibleToJSONValue], type: String? = nil) {
             self.description = description
-            self.values = values
+            self.values = values.map { $0.jsonValue }
+            self.type = type
+        }
+
+        public static func string(description: String? = nil, values: [String]) -> EnumSchema {
+            return EnumSchema(description: description, values: values, type: "string")
+        }
+
+        public enum CodingKeys: String, CodingKey {
+            case description
+            case values = "enum"
+            case type
         }
     }
 

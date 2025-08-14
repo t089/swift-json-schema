@@ -18,6 +18,14 @@ struct JSONSchemaTests {
         "array": .array(
           description: "A test array", items: .string(), minItems: 1, maxItems: 5, uniqueItems: true
         ),
+        "enum": .enum(
+          description: "An enum of values",
+          values: ["value1", 5, "value3", nil as JSONValue]
+        ),
+        "stringEnum": .enum(
+          description: "A string enum",
+          values: ["value1", "value2", "value3"]
+        )
       ], required: ["test", "number"],
       additionalProperties: .false)
 
@@ -42,11 +50,29 @@ struct JSONSchemaTests {
               "type" : "array",
               "uniqueItems" : true
             },
+            "enum" : {
+              "description" : "An enum of values",
+              "enum" : [
+                "value1",
+                5,
+                "value3",
+                null
+              ]
+            },
             "number" : {
               "description" : "A test number",
               "maximum" : 100,
               "minimum" : 0,
               "type" : "number"
+            },
+            "stringEnum" : {
+              "description" : "A string enum",
+              "enum" : [
+                "value1",
+                "value2",
+                "value3"
+              ],
+              "type" : "string"
             },
             "test" : {
               "description" : "A test string",
@@ -92,6 +118,24 @@ struct JSONSchemaTests {
             "minLength" : 1,
             "type" : "string"
           },
+          "enum" : {
+            "description" : "An enum of values",
+            "enum" : [
+              "value1",
+              5,
+              "value3",
+              null
+            ]
+          },
+          "stringEnum" : {
+            "description" : "A string enum",
+            "enum" : [
+              "value1",
+              "value2",
+              "value3"
+            ],
+            "type" : "string"
+          },
           "oneOrTheOther": {
             "oneOf": [
               {
@@ -135,5 +179,11 @@ struct JSONSchemaTests {
     #expect(schema.object?.properties["oneOrTheOther"]?.oneOf?.count == 2)
     #expect(schema.object?.properties["oneOrTheOther"]?.oneOf?[0].type == "string")
     #expect(schema.object?.properties["oneOrTheOther"]?.oneOf?[1].type == "number")
+    #expect(schema.object?.properties["stringEnum"]?.type == "string")
+    #expect(schema.object?.properties["stringEnum"]?.enum?.values.count == 3)
+    #expect(schema.object?.properties["stringEnum"]?.enum?.values == ["value1".jsonValue, "value2".jsonValue, "value3".jsonValue])
+    #expect(schema.object?.properties["enum"]?.type == nil)
+    #expect(schema.object?.properties["enum"]?.enum?.values.count == 4)
+    #expect(schema.object?.properties["enum"]?.enum?.values == ["value1".jsonValue, 5.jsonValue, "value3".jsonValue, nil as JSONValue])
   }
 }
