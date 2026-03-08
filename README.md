@@ -9,6 +9,7 @@ JSONSchema provides a native Swift representation of JSON Schema, allowing you t
 - Read and parse existing JSON Schema files
 - Modify and transform schemas
 - Full `Codable` support for seamless JSON serialization
+- High-performance encoding/decoding via [NewCodable](https://forums.swift.org/t/new-codable-prototype-available-for-feedback/85186) using [swift-json-macros](https://github.com/t089/swift-json-macros)
 
 > **Note**: This library focuses on schema representation and manipulation. It does not currently provide validation functionality.
 
@@ -23,6 +24,8 @@ dependencies: [
     .package(url: "https://github.com/t089/swift-json-schema.git", from: "0.1.0")
 ]
 ```
+
+> **Note**: The `new-codable` branch requires Swift 6.3+ (snapshot) and depends on the experimental `new-codable` branch of `swift-foundation`.
 
 ## Usage
 
@@ -79,10 +82,11 @@ let paymentSchema = JSONSchema.oneOf([
 
 ### Reading and Writing JSON Schema
 
-```swift
-import FoundationEssentials
+#### Legacy Codable
 
-// Decode from JSON
+```swift
+import Foundation
+
 let schemaJSON = """
 {
     "type": "object",
@@ -96,13 +100,34 @@ let schemaJSON = """
 
 let schema = try JSONDecoder().decode(JSONSchema.self, from: Data(schemaJSON.utf8))
 
-// Encode to JSON
 let encoder = JSONEncoder()
 encoder.outputFormatting = .prettyPrinted
 let encoded = try encoder.encode(schema)
 print(String(data: encoded, encoding: .utf8)!)
 ```
 
+#### NewCodable (high-performance)
+
+```swift
+import JSONSchema
+import NewCodable
+
+let schemaJSON = """
+{
+    "type": "object",
+    "properties": {
+        "name": { "type": "string", "minLength": 1 },
+        "age": { "type": "integer", "minimum": 0 }
+    },
+    "required": ["name"]
+}
+"""
+
+let schema = try NewJSONDecoder().decode(JSONSchema.self, from: Data(schemaJSON.utf8))
+
+let encoded = try NewJSONEncoder().encode(schema)
+print(String(decoding: encoded, as: UTF8.self))
+```
 
 ## Supported Schema Types
 
@@ -118,7 +143,7 @@ print(String(data: encoded, encoding: .utf8)!)
 - `array` - Arrays with item type specifications
 
 ### Special Types
-- `enum` - String values restricted to a specific set
+- `enum` - Values restricted to a specific set (strings, numbers, or mixed)
 
 ### Logical Operators
 - `anyOf` - Matches if any of the provided schemas match
@@ -178,7 +203,8 @@ JSONSchema.not(JSONSchema)
 
 ## Requirements
 
-- Swift 6.1+
+- Swift 6.3+ (snapshot) for the `new-codable` branch
+- Swift 6.1+ for the `main` branch
 
 ## License
 
