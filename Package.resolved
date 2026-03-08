@@ -1,0 +1,42 @@
+{
+  "originHash" : "e419edb01bf91c9d628c7b7f31d318408f5139aa1fe6e468738a20b187515812",
+  "pins" : [
+    {
+      "identity" : "swift-grammar",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/tayloraswift/swift-grammar",
+      "state" : {
+        "revision" : "0dac977b50bf677b2c3adabd7d5586a7b6e09b17",
+        "version" : "0.5.0"
+      }
+    },
+    {
+      "identity" : "swift-json",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/tayloraswift/swift-json",
+      "state" : {
+        "revision" : "95d193061e4fdadcb58e8cb54bc74a344f281c2d",
+        "version" : "2.3.0"
+      }
+    },
+    {
+      "identity" : "swift-json-macros",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/t089/swift-json-macros",
+      "state" : {
+        "branch" : "main",
+        "revision" : "2287884a13bbb7e80e0b2ab4ed89b3514920da47"
+      }
+    },
+    {
+      "identity" : "swift-syntax",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/swiftlang/swift-syntax",
+      "state" : {
+        "revision" : "4799286537280063c85a32f09884cfbca301b1a1",
+        "version" : "602.0.0"
+      }
+    }
+  ],
+  "version" : 3
+}
