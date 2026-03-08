@@ -6,16 +6,19 @@ import PackageDescription
 let package = Package(
     name: "swift-json-schema",
     products: [
-        // Products define the executables and libraries a package produces, making them visible to other packages.
         .library(
             name: "JSONSchema",
             targets: ["JSONSchema"]),
     ],
+    dependencies: [
+        .package(path: "../swift-json-macros"),
+    ],
     targets: [
-        // Targets are the basic building blocks of a package, defining a module or a test suite.
-        // Targets can depend on other targets in this package and products from dependencies.
         .target(
-            name: "JSONSchema"),
+            name: "JSONSchema",
+            dependencies: [
+                .product(name: "JSONMacros", package: "swift-json-macros"),
+            ]),
         .testTarget(
             name: "JSONSchemaTests",
             dependencies: ["JSONSchema"]

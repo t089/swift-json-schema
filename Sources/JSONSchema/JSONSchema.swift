@@ -1,3 +1,11 @@
+import JSONMacros
+
+#if canImport(FoundationEssentials)
+    import FoundationEssentials
+#else
+    import Foundation
+#endif
+
 /// A type-safe Swift representation of JSON Schema.
 ///
 /// `JSONSchema` provides a Swift-native way to define, read, and modify JSON Schema specifications.
@@ -90,7 +98,7 @@ public struct JSONSchema: Codable, Equatable, Sendable {
         case .number: return NumberSchema._Type.number.rawValue
         case .boolean: return BooleanSchema._Type.boolean.rawValue
         case .null: return NullSchema._Type.null.rawValue
-        case .true, .false, .anyOf, .allOf, .oneOf, .not: return nil  // These do not have a type property in the schema
+        case .true, .false, .anyOf, .allOf, .oneOf, .not: return nil
         }
     }
 
@@ -106,7 +114,7 @@ public struct JSONSchema: Codable, Equatable, Sendable {
         case .number(let schema): return schema.description
         case .boolean(let schema): return schema.description
         case .null(let schema): return schema.description
-        case .true, .false, .anyOf, .allOf, .oneOf, .not: return nil  // These do not have a description property in the schema
+        case .true, .false, .anyOf, .allOf, .oneOf, .not: return nil
         }
     }
 
@@ -200,7 +208,7 @@ public struct JSONSchema: Codable, Equatable, Sendable {
             self._type = .enum(try container.decode(EnumSchema.self))
             return
         } catch { errors.append(error) }
-        
+
         do {
             self._type = .string(try container.decode(StringSchema.self))
             return
@@ -210,8 +218,6 @@ public struct JSONSchema: Codable, Equatable, Sendable {
             self._type = .object(try container.decode(ObjectSchema.self))
             return
         } catch { errors.append(error) }
-
-        
 
         do {
             self._type = .array(try container.decode(ArraySchema.self))
@@ -265,7 +271,8 @@ public struct JSONSchema: Codable, Equatable, Sendable {
         } catch { errors.append(error) }
         throw DecodingError.dataCorruptedError(
             in: container,
-            debugDescription: "Unsupported JSON Schema type. Errors: \(errors.map { "\($0)" }.joined(separator: ", "))"
+            debugDescription:
+                "Unsupported JSON Schema type. Errors: \(errors.map { "\($0)" }.joined(separator: ", "))"
         )
     }
 
@@ -293,12 +300,6 @@ public struct JSONSchema: Codable, Equatable, Sendable {
     }
 
     /// Creates a string schema with optional constraints.
-    /// - Parameters:
-    ///   - description: Human-readable description of the schema
-    ///   - minLength: Minimum string length
-    ///   - maxLength: Maximum string length
-    ///   - pattern: Regular expression pattern the string must match
-    /// - Returns: A new string schema
     public static func string(
         description: String? = nil,
         minLength: Int? = nil,
@@ -313,12 +314,6 @@ public struct JSONSchema: Codable, Equatable, Sendable {
     }
 
     /// Creates an object schema with property definitions.
-    /// - Parameters:
-    ///   - description: Human-readable description of the schema
-    ///   - properties: Dictionary of property names to their schemas
-    ///   - required: Array of property names that must be present
-    ///   - additionalProperties: Schema for properties not explicitly defined
-    /// - Returns: A new object schema
     public static func object(
         description: String? = nil,
         properties: [String: JSONSchema],
@@ -337,16 +332,12 @@ public struct JSONSchema: Codable, Equatable, Sendable {
         )
     }
 
-    /// Creates an enum schema with a fixed set of allowed string values.
-    /// - Parameters:
-    ///   - description: Human-readable description of the schema
-    ///   - values: Array of allowed string values
-    /// - Returns: A new enum schema
+    /// Creates an enum schema with a fixed set of allowed values.
     public static func `enum`(
         description: String? = nil,
         values: [any ConvertibleToJSONValue] = []
     ) -> Self {
-        JSONSchema(type: .enum(.init(description: description, values: values)))
+        JSONSchema(type: .enum(.init(description: description, values: values as [any ConvertibleToJSONValue])))
     }
 
     public static func `enum`(
@@ -357,13 +348,6 @@ public struct JSONSchema: Codable, Equatable, Sendable {
     }
 
     /// Creates an array schema with item type and constraints.
-    /// - Parameters:
-    ///   - description: Human-readable description of the schema
-    ///   - items: Schema that all array items must conform to
-    ///   - minItems: Minimum number of items
-    ///   - maxItems: Maximum number of items
-    ///   - uniqueItems: Whether all items must be unique
-    /// - Returns: A new array schema
     public static func array(
         description: String? = nil,
         items: JSONSchema,
@@ -385,11 +369,6 @@ public struct JSONSchema: Codable, Equatable, Sendable {
     }
 
     /// Creates an integer schema with optional range constraints.
-    /// - Parameters:
-    ///   - description: Human-readable description of the schema
-    ///   - minimum: Minimum allowed value (inclusive)
-    ///   - maximum: Maximum allowed value (inclusive)
-    /// - Returns: A new integer schema
     public static func integer(
         description: String? = nil,
         minimum: Int? = nil,
@@ -399,11 +378,6 @@ public struct JSONSchema: Codable, Equatable, Sendable {
     }
 
     /// Creates a number schema for floating-point values with optional range constraints.
-    /// - Parameters:
-    ///   - description: Human-readable description of the schema
-    ///   - minimum: Minimum allowed value (inclusive)
-    ///   - maximum: Maximum allowed value (inclusive)
-    /// - Returns: A new number schema
     public static func number(
         description: String? = nil,
         minimum: Double? = nil,
@@ -413,38 +387,34 @@ public struct JSONSchema: Codable, Equatable, Sendable {
     }
 
     /// Creates a boolean schema that matches a boolean value.
-    /// - Parameter description: Human-readable description of the schema
-    /// - Returns: A new boolean schema.
     public static func boolean(description: String? = nil) -> Self {
         JSONSchema(type: .boolean(.init(description: description)))
     }
 
     /// Creates a null schema that matches a null value.
-    /// - Parameter description: Human-readable description of the schema
-    /// - Returns: A new null schema.
     public static func null(description: String? = nil) -> Self {
         JSONSchema(type: .null(.init(description: description)))
     }
 
     /// Creates a schema that matches if any of the provided schemas match.
-    /// - Parameter schemas: Array of schemas where at least one must match
-    /// - Returns: A new anyOf schema
-    public static func anyOf(_ schemas: [JSONSchema]) -> Self { JSONSchema(type: .anyOf(.init(anyOf: schemas))) }
+    public static func anyOf(_ schemas: [JSONSchema]) -> Self {
+        JSONSchema(type: .anyOf(.init(anyOf: schemas)))
+    }
 
     /// Creates a schema that matches only if all of the provided schemas match.
-    /// - Parameter schemas: Array of schemas that must all match
-    /// - Returns: A new allOf schema
-    public static func allOf(_ schemas: [JSONSchema]) -> Self { JSONSchema(type: .allOf(.init(allOf: schemas))) }
+    public static func allOf(_ schemas: [JSONSchema]) -> Self {
+        JSONSchema(type: .allOf(.init(allOf: schemas)))
+    }
 
     /// Creates a schema that matches exactly one of the provided schemas.
-    /// - Parameter schemas: Array of schemas where exactly one must match
-    /// - Returns: A new oneOf schema
-    public static func oneOf(_ schemas: [JSONSchema]) -> Self { JSONSchema(type: .oneOf(.init(oneOf: schemas))) }
+    public static func oneOf(_ schemas: [JSONSchema]) -> Self {
+        JSONSchema(type: .oneOf(.init(oneOf: schemas)))
+    }
 
     /// Creates a schema that inverts the matching logic of another schema.
-    /// - Parameter schema: Schema whose matching logic should be inverted
-    /// - Returns: A new not schema
-    public static func not(_ schema: JSONSchema) -> Self { JSONSchema(type: .not(.init(not: schema))) }
+    public static func not(_ schema: JSONSchema) -> Self {
+        JSONSchema(type: .not(.init(not: schema)))
+    }
 
     /// A boolean schema that always matches (allows any value).
     public static var `true`: Self { JSONSchema(type: .true) }
@@ -452,9 +422,14 @@ public struct JSONSchema: Codable, Equatable, Sendable {
     /// A boolean schema that never matches (rejects all values).
     public static var `false`: Self { JSONSchema(type: .false) }
 
+    // MARK: - Sub-schema types
+
     /// Schema for string values with optional validation constraints.
+    @JSONCodable
     public struct StringSchema: Codable, Equatable, Sendable {
-        public enum _Type: String, Codable, Sendable { case string = "string" }
+        public enum _Type: String, Codable, Sendable, JSONDecodable, JSONEncodable {
+            case string = "string"
+        }
 
         public var type: _Type = .string
         public var description: String?
@@ -462,19 +437,14 @@ public struct JSONSchema: Codable, Equatable, Sendable {
         public var maxLength: Int?
         public var pattern: String?
 
-        /// Initializes a new string schema with optional constraints.
-        /// - Parameters:
-        ///   - description: Human-readable description of the schema
-        ///   - minLength: Minimum string length
-        ///   - maxLength: Maximum string length
-        ///   - pattern: Regular expression pattern the string must match
-        /// - Returns: A new string schema
         public init(
+            type: _Type = .string,
             description: String? = nil,
             minLength: Int? = nil,
             maxLength: Int? = nil,
             pattern: String? = nil
         ) {
+            self.type = type
             self.description = description
             self.minLength = minLength
             self.maxLength = maxLength
@@ -483,26 +453,25 @@ public struct JSONSchema: Codable, Equatable, Sendable {
     }
 
     /// Schema for object values with property definitions and validation rules.
+    @JSONCodable
     public struct ObjectSchema: Codable, Equatable, Sendable {
-        public enum _Type: String, Codable, Sendable { case object = "object" }
+        public enum _Type: String, Codable, Sendable, JSONDecodable, JSONEncodable {
+            case object = "object"
+        }
         public var type: _Type = .object
         public var description: String?
         public var properties: [String: JSONSchema]
         public var required: [String]?
         public var additionalProperties: JSONSchema?
 
-        /// Initializes a new object schema with property definitions.
-        /// - Parameters:
-        ///   - description: Human-readable description of the schema
-        ///   - properties: Dictionary of property names to their schemas
-        ///   - required: Array of property names that must be present
-        ///   - additionalProperties: Schema for properties not explicitly defined
         public init(
+            type: _Type = .object,
             description: String? = nil,
             properties: [String: JSONSchema],
             required: [String]? = nil,
             additionalProperties: JSONSchema? = nil
         ) {
+            self.type = type
             self.description = description
             self.properties = properties
             self.required = required
@@ -510,24 +479,22 @@ public struct JSONSchema: Codable, Equatable, Sendable {
         }
     }
 
-    /// Schema for enumerated string values restricted to a specific set.
+    /// Schema for enumerated values restricted to a specific set.
+    @JSONCodable
     public struct EnumSchema: Codable, Equatable, Sendable {
         public var type: String?
         public var description: String?
+        @JSONKey("enum")
         public var values: [JSONValue]
 
-        /// Initializes a new enum schema with a fixed set of allowed values.
-        /// - Parameters:
-        ///   - description: Human-readable description of the schema
-        ///   - values: Array of allowed string values
-        public init(description: String? = nil, values: [any ConvertibleToJSONValue], type: String? = nil) {
+        public init(type: String? = nil, description: String? = nil, values: [any ConvertibleToJSONValue]) {
+            self.type = type
             self.description = description
             self.values = values.map { $0.jsonValue }
-            self.type = type
         }
 
         public static func string(description: String? = nil, values: [String]) -> EnumSchema {
-            return EnumSchema(description: description, values: values, type: "string")
+            return EnumSchema(type: "string", description: description, values: values)
         }
 
         public enum CodingKeys: String, CodingKey {
@@ -538,8 +505,11 @@ public struct JSONSchema: Codable, Equatable, Sendable {
     }
 
     /// Schema for array values with item type and validation constraints.
+    @JSONCodable
     public struct ArraySchema: Codable, Equatable, Sendable {
-        public enum _Type: String, Codable, Sendable { case array = "array" }
+        public enum _Type: String, Codable, Sendable, JSONDecodable, JSONEncodable {
+            case array = "array"
+        }
         public var type: _Type = .array
         public var description: String?
         public var items: JSONSchema
@@ -547,20 +517,15 @@ public struct JSONSchema: Codable, Equatable, Sendable {
         public var maxItems: Int?
         public var uniqueItems: Bool?
 
-        /// Initializes a new array schema with item type and constraints.
-        /// - Parameters:
-        ///   - description: Human-readable description of the schema
-        ///   - items: Schema that all array items must conform to
-        ///   - minItems: Minimum number of items
-        ///   - maxItems: Maximum number of items
-        ///   - uniqueItems: Whether all items must be unique
         public init(
+            type: _Type = .array,
             description: String? = nil,
             items: JSONSchema,
             minItems: Int? = nil,
             maxItems: Int? = nil,
             uniqueItems: Bool? = nil
         ) {
+            self.type = type
             self.description = description
             self.items = items
             self.minItems = minItems
@@ -570,19 +535,18 @@ public struct JSONSchema: Codable, Equatable, Sendable {
     }
 
     /// Schema for integer values with optional range constraints.
+    @JSONCodable
     public struct IntegerSchema: Codable, Equatable, Sendable {
-        public enum _Type: String, Codable, Sendable { case integer = "integer" }
+        public enum _Type: String, Codable, Sendable, JSONDecodable, JSONEncodable {
+            case integer = "integer"
+        }
         public var type: _Type = .integer
         public var description: String?
         public var minimum: Int?
         public var maximum: Int?
 
-        /// Initializes a new integer schema with optional range constraints.
-        /// - Parameters:
-        ///   - description: Human-readable description of the schema
-        ///   - minimum: Minimum allowed value (inclusive)
-        ///   - maximum: Maximum allowed value (inclusive)
-        public init(description: String? = nil, minimum: Int? = nil, maximum: Int? = nil) {
+        public init(type: _Type = .integer, description: String? = nil, minimum: Int? = nil, maximum: Int? = nil) {
+            self.type = type
             self.description = description
             self.minimum = minimum
             self.maximum = maximum
@@ -590,23 +554,23 @@ public struct JSONSchema: Codable, Equatable, Sendable {
     }
 
     /// Schema for numeric values (floating point) with optional range constraints.
+    @JSONCodable
     public struct NumberSchema: Codable, Equatable, Sendable {
-        public enum _Type: String, Codable, Sendable { case number = "number" }
+        public enum _Type: String, Codable, Sendable, JSONDecodable, JSONEncodable {
+            case number = "number"
+        }
         public var type: _Type = .number
         public var description: String?
         public var minimum: Double?
         public var maximum: Double?
 
-        /// Initializes a new number schema with optional range constraints.
-        /// - Parameters:
-        ///   - description: Human-readable description of the schema
-        ///   - minimum: Minimum allowed value (inclusive)
-        ///   - maximum: Maximum allowed value (inclusive)
         public init(
+            type: _Type = .number,
             description: String? = nil,
             minimum: Double? = nil,
             maximum: Double? = nil
         ) {
+            self.type = type
             self.description = description
             self.minimum = minimum
             self.maximum = maximum
@@ -614,66 +578,376 @@ public struct JSONSchema: Codable, Equatable, Sendable {
     }
 
     /// Schema for boolean values.
+    @JSONCodable
     public struct BooleanSchema: Codable, Equatable, Sendable {
-        public enum _Type: String, Codable, Sendable { case boolean = "boolean" }
+        public enum _Type: String, Codable, Sendable, JSONDecodable, JSONEncodable {
+            case boolean = "boolean"
+        }
         public var type: _Type = .boolean
         public var description: String?
-        // No additional properties needed for boolean schema
 
-        /// Initializes a new boolean schema.
-        /// - Parameter description: Human-readable description of the schema
         public init(
+            type: _Type = .boolean,
             description: String? = nil
-        ) { self.description = description }
+        ) {
+            self.type = type
+            self.description = description
+        }
     }
 
     /// Schema for null values.
+    @JSONCodable
     public struct NullSchema: Codable, Equatable, Sendable {
-        public enum _Type: String, Codable, Sendable { case null = "null" }
+        public enum _Type: String, Codable, Sendable, JSONDecodable, JSONEncodable {
+            case null = "null"
+        }
         public var type: _Type = .null
         public var description: String?
-        // No additional properties needed for null schema
 
-        /// Initializes a new null schema.
-        /// - Parameter description: Human-readable description of the schema
         public init(
+            type: _Type = .null,
             description: String? = nil
-        ) { self.description = description }
+        ) {
+            self.type = type
+            self.description = description
+        }
     }
 
     /// Schema that matches if any of the provided schemas match.
+    @JSONCodable
     public struct AnyOfSchema: Codable, Equatable, Sendable {
         public var anyOf: [JSONSchema]
 
-        /// Initializes a new anyOf schema.
-        /// - Parameter anyOf: Array of schemas where at least one must match
         public init(anyOf: [JSONSchema]) { self.anyOf = anyOf }
     }
 
     /// Schema that matches only if all of the provided schemas match.
+    @JSONCodable
     public struct AllOfSchema: Codable, Equatable, Sendable {
         public var allOf: [JSONSchema]
 
-        /// Initializes a new allOf schema.
-        /// - Parameter allOf: Array of schemas that must all match
         public init(allOf: [JSONSchema]) { self.allOf = allOf }
     }
 
     /// Schema that matches exactly one of the provided schemas.
+    @JSONCodable
     public struct OneOfSchema: Codable, Equatable, Sendable {
         public var oneOf: [JSONSchema]
 
-        /// Initializes a new oneOf schema.
-        /// - Parameter oneOf: Array of schemas where exactly one must match
         public init(oneOf: [JSONSchema]) { self.oneOf = oneOf }
     }
 
     /// Schema that inverts the matching logic of another schema.
+    @JSONCodable
     public struct NotSchema: Codable, Equatable, Sendable {
         public var not: JSONSchema
 
-        /// Initializes a new not schema.
-        /// - Parameter not: Schema whose matching logic should be inverted
         public init(not: JSONSchema) { self.not = not }
+    }
+}
+
+// MARK: - JSONSchema manual JSONEncodable
+
+extension JSONSchema: JSONEncodable {
+    public func encode(to encoder: inout JSONDirectEncoder) throws(CodingError.Encoding) {
+        switch _type {
+        case .string(let schema): try schema.encode(to: &encoder)
+        case .object(let schema): try schema.encode(to: &encoder)
+        case .enum(let schema): try schema.encode(to: &encoder)
+        case .array(let schema): try schema.encode(to: &encoder)
+        case .integer(let schema): try schema.encode(to: &encoder)
+        case .number(let schema): try schema.encode(to: &encoder)
+        case .boolean(let schema): try schema.encode(to: &encoder)
+        case .null(let schema): try schema.encode(to: &encoder)
+        case .true: try encoder.encode(true)
+        case .false: try encoder.encode(false)
+        case .anyOf(let schema): try schema.encode(to: &encoder)
+        case .allOf(let schema): try schema.encode(to: &encoder)
+        case .oneOf(let schema): try schema.encode(to: &encoder)
+        case .not(let schema): try schema.encode(to: &encoder)
+        }
+    }
+}
+
+// MARK: - JSONSchema manual JSONDecodable
+
+extension JSONSchema: JSONDecodable {
+    public static func decode<D: JSONDecoderProtocol & ~Escapable>(
+        from decoder: inout D
+    ) throws(CodingError.Decoding) -> Self {
+        try decoder.decodeAny(SchemaVisitor())
+    }
+}
+
+/// Visitor that decodes a JSONSchema from any JSON value.
+/// Handles booleans (true/false schemas) and objects (all other schema types).
+private struct SchemaVisitor: JSONDecodingVisitor {
+    typealias DecodedValue = JSONSchema
+
+    var prefersArbitraryPrecisionNumbers: Bool { false }
+
+    func visit(_ bool: Bool) throws(CodingError.Decoding) -> JSONSchema {
+        bool ? .true : .false
+    }
+
+    func visitNone() throws(CodingError.Decoding) -> JSONSchema {
+        throw CodingError.dataCorrupted(debugDescription: "null is not a valid JSON Schema")
+    }
+
+    func visitUTF8Bytes(_ buffer: UTF8Span) throws(CodingError.Decoding) -> JSONSchema {
+        throw CodingError.dataCorrupted(debugDescription: "string is not a valid JSON Schema")
+    }
+
+    func visit(_ integer: Int64) throws(CodingError.Decoding) -> JSONSchema {
+        throw CodingError.dataCorrupted(debugDescription: "number is not a valid JSON Schema")
+    }
+
+    func visit(_ integer: UInt64) throws(CodingError.Decoding) -> JSONSchema {
+        throw CodingError.dataCorrupted(debugDescription: "number is not a valid JSON Schema")
+    }
+
+    func visit(_ double: Double) throws(CodingError.Decoding) -> JSONSchema {
+        throw CodingError.dataCorrupted(debugDescription: "number is not a valid JSON Schema")
+    }
+
+    func visitArbitraryPrecisionNumber(_ span: UTF8Span) throws(CodingError.Decoding) -> JSONSchema {
+        throw CodingError.dataCorrupted(debugDescription: "number is not a valid JSON Schema")
+    }
+
+    func visitArbitraryPrecisionNumber(_ string: String) throws(CodingError.Decoding) -> JSONSchema {
+        throw CodingError.dataCorrupted(debugDescription: "number is not a valid JSON Schema")
+    }
+
+    func visit(decoder: inout some JSONArrayDecoder & ~Escapable) throws(CodingError.Decoding)
+        -> JSONSchema
+    {
+        throw CodingError.dataCorrupted(debugDescription: "array is not a valid JSON Schema")
+    }
+
+    func visit(decoder: inout some JSONDictionaryDecoder & ~Escapable) throws(CodingError.Decoding)
+        -> JSONSchema
+    {
+        var typeValue: String?
+        var descriptionValue: String?
+        var enumValues: [JSONValue]?
+        var properties: [String: JSONSchema]?
+        var required: [String]?
+        var additionalProperties: JSONSchema?
+        var items: JSONSchema?
+        var minLength: Int?
+        var maxLength: Int?
+        var pattern: String?
+        var minimum: JSONValue.Kind?
+        var maximum: JSONValue.Kind?
+        var minItems: Int?
+        var maxItems: Int?
+        var uniqueItems: Bool?
+        var anyOf: [JSONSchema]?
+        var allOf: [JSONSchema]?
+        var oneOf: [JSONSchema]?
+        var notSchema: JSONSchema?
+
+        try decoder.decodeEachKeyAndValue { key, valueDecoder throws(CodingError.Decoding) -> Bool in
+            switch key {
+            case "type":
+                typeValue = try valueDecoder.decode(String.self)
+            case "description":
+                descriptionValue = try valueDecoder.decode(String.self)
+            case "enum":
+                enumValues = try valueDecoder.decodeArray { arrayDecoder throws(CodingError.Decoding) in
+                    var vals: [JSONValue] = []
+                    try arrayDecoder.decodeEachElement { elemDecoder throws(CodingError.Decoding) in
+                        let val = try JSONValue.decode(from: &elemDecoder)
+                        vals.append(val)
+                    }
+                    return vals
+                }
+            case "properties":
+                properties = try valueDecoder.decodeStruct {
+                    structDecoder throws(CodingError.Decoding) in
+                    var props: [String: JSONSchema] = [:]
+                    try structDecoder.decodeEachKeyAndValue {
+                        propKey,
+                        propValueDecoder throws(CodingError.Decoding) -> Bool in
+                        props[propKey] = try JSONSchema.decode(from: &propValueDecoder)
+                        return false
+                    }
+                    return props
+                }
+            case "required":
+                required = try valueDecoder.decodeArray { arrayDecoder throws(CodingError.Decoding) in
+                    var reqs: [String] = []
+                    try arrayDecoder.decodeEachElement { elemDecoder throws(CodingError.Decoding) in
+                        reqs.append(try elemDecoder.decode(String.self))
+                    }
+                    return reqs
+                }
+            case "additionalProperties":
+                additionalProperties = try JSONSchema.decode(from: &valueDecoder)
+            case "items":
+                items = try JSONSchema.decode(from: &valueDecoder)
+            case "minLength":
+                minLength = try valueDecoder.decode(Int.self)
+            case "maxLength":
+                maxLength = try valueDecoder.decode(Int.self)
+            case "pattern":
+                pattern = try valueDecoder.decode(String.self)
+            case "minimum":
+                minimum = try JSONValue.Kind.decode(from: &valueDecoder)
+            case "maximum":
+                maximum = try JSONValue.Kind.decode(from: &valueDecoder)
+            case "minItems":
+                minItems = try valueDecoder.decode(Int.self)
+            case "maxItems":
+                maxItems = try valueDecoder.decode(Int.self)
+            case "uniqueItems":
+                uniqueItems = try valueDecoder.decode(Bool.self)
+            case "anyOf":
+                anyOf = try valueDecoder.decodeArray { arrayDecoder throws(CodingError.Decoding) in
+                    var schemas: [JSONSchema] = []
+                    try arrayDecoder.decodeEachElement { elemDecoder throws(CodingError.Decoding) in
+                        schemas.append(try JSONSchema.decode(from: &elemDecoder))
+                    }
+                    return schemas
+                }
+            case "allOf":
+                allOf = try valueDecoder.decodeArray { arrayDecoder throws(CodingError.Decoding) in
+                    var schemas: [JSONSchema] = []
+                    try arrayDecoder.decodeEachElement { elemDecoder throws(CodingError.Decoding) in
+                        schemas.append(try JSONSchema.decode(from: &elemDecoder))
+                    }
+                    return schemas
+                }
+            case "oneOf":
+                oneOf = try valueDecoder.decodeArray { arrayDecoder throws(CodingError.Decoding) in
+                    var schemas: [JSONSchema] = []
+                    try arrayDecoder.decodeEachElement { elemDecoder throws(CodingError.Decoding) in
+                        schemas.append(try JSONSchema.decode(from: &elemDecoder))
+                    }
+                    return schemas
+                }
+            case "not":
+                notSchema = try JSONSchema.decode(from: &valueDecoder)
+            default:
+                // Skip unknown keys
+                let _ = try valueDecoder.decodeAny(KindVisitor())
+            }
+            return false
+        }
+
+        // Determine the schema type from the decoded keys.
+        // Enum takes priority (presence of "enum" key).
+        if let enumValues {
+            return JSONSchema(
+                type: .enum(
+                    .init(
+                        type: typeValue,
+                        description: descriptionValue,
+                        values: enumValues
+                    )
+                )
+            )
+        }
+
+        // Logical operators
+        if let anyOf { return JSONSchema(type: .anyOf(.init(anyOf: anyOf))) }
+        if let allOf { return JSONSchema(type: .allOf(.init(allOf: allOf))) }
+        if let oneOf { return JSONSchema(type: .oneOf(.init(oneOf: oneOf))) }
+        if let notSchema { return JSONSchema(type: .not(.init(not: notSchema))) }
+
+        // Type-based schemas
+        switch typeValue {
+        case "string":
+            return JSONSchema(
+                type: .string(
+                    .init(
+                        description: descriptionValue,
+                        minLength: minLength,
+                        maxLength: maxLength,
+                        pattern: pattern
+                    )
+                )
+            )
+        case "object":
+            return JSONSchema(
+                type: .object(
+                    .init(
+                        description: descriptionValue,
+                        properties: properties ?? [:],
+                        required: required,
+                        additionalProperties: additionalProperties
+                    )
+                )
+            )
+        case "array":
+            guard let items else {
+                throw CodingError.dataCorrupted(
+                    debugDescription: "array schema requires 'items'"
+                )
+            }
+            return JSONSchema(
+                type: .array(
+                    .init(
+                        description: descriptionValue,
+                        items: items,
+                        minItems: minItems,
+                        maxItems: maxItems,
+                        uniqueItems: uniqueItems
+                    )
+                )
+            )
+        case "integer":
+            var intMin: Int?
+            var intMax: Int?
+            if case .integer(let v)? = minimum { intMin = v }
+            if case .integer(let v)? = maximum { intMax = v }
+            return JSONSchema(
+                type: .integer(
+                    .init(description: descriptionValue, minimum: intMin, maximum: intMax)
+                )
+            )
+        case "number":
+            var dblMin: Double?
+            var dblMax: Double?
+            if case .number(let v)? = minimum {
+                dblMin = v
+            } else if case .integer(let v)? = minimum {
+                dblMin = Double(v)
+            }
+            if case .number(let v)? = maximum {
+                dblMax = v
+            } else if case .integer(let v)? = maximum {
+                dblMax = Double(v)
+            }
+            return JSONSchema(
+                type: .number(
+                    .init(description: descriptionValue, minimum: dblMin, maximum: dblMax)
+                )
+            )
+        case "boolean":
+            return JSONSchema(type: .boolean(.init(description: descriptionValue)))
+        case "null":
+            return JSONSchema(type: .null(.init(description: descriptionValue)))
+        case nil:
+            throw CodingError.dataCorrupted(
+                debugDescription: "Cannot determine JSON Schema type from object keys"
+            )
+        default:
+            throw CodingError.dataCorrupted(
+                debugDescription: "Unknown JSON Schema type: \(typeValue!)"
+            )
+        }
+    }
+}
+
+// MARK: - visitString for SchemaVisitor
+
+extension SchemaVisitor {
+    func visitString(_ string: String) throws(CodingError.Decoding) -> JSONSchema {
+        throw CodingError.dataCorrupted(debugDescription: "string is not a valid JSON Schema")
+    }
+
+    func visit(_ float: Float) throws(CodingError.Decoding) -> JSONSchema {
+        throw CodingError.dataCorrupted(debugDescription: "number is not a valid JSON Schema")
     }
 }
