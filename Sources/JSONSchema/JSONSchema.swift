@@ -1,10 +1,4 @@
-import JSONMacros
-
-#if canImport(FoundationEssentials)
-    import FoundationEssentials
-#else
-    import Foundation
-#endif
+@preconcurrency import JSONMacros
 
 /// A type-safe Swift representation of JSON Schema.
 ///
@@ -13,7 +7,7 @@ import JSONMacros
 ///
 /// ## Features
 /// - Type-safe schema construction
-/// - Full `Codable` support for reading/writing JSON Schema files
+/// - High-performance JSON encoding/decoding via NewCodable
 /// - Support for all major JSON Schema types and constructs
 /// - Fluent API for building schemas programmatically
 ///
@@ -50,6 +44,8 @@ import JSONMacros
 /// ## Reading and Writing Schemas
 ///
 /// ```swift
+/// import NewCodable
+///
 /// // Decode from JSON
 /// let schemaJSON = """
 /// {
@@ -59,12 +55,12 @@ import JSONMacros
 ///     }
 /// }
 /// """
-/// let schema = try JSONDecoder().decode(JSONSchema.self, from: schemaJSON.data(using: .utf8)!)
+/// let schema = try NewJSONDecoder().decode(JSONSchema.self, from: Data(schemaJSON.utf8))
 ///
 /// // Encode to JSON
-/// let encoded = try JSONEncoder().encode(schema)
+/// let encoded = try NewJSONEncoder().encode(schema)
 /// ```
-public struct JSONSchema: Codable, Equatable, Sendable {
+public struct JSONSchema: Equatable, Sendable {
     /// Internal representation of the various schema types.
     /// Uses an indirect enum to support recursive schema definitions.
     indirect enum Internal: Equatable, Sendable {
@@ -200,105 +196,6 @@ public struct JSONSchema: Codable, Equatable, Sendable {
 
     init(type: Internal) { self._type = type }
 
-    public init(from decoder: any Decoder) throws {
-
-        let container = try decoder.singleValueContainer()
-        var errors: [any Error] = []
-        do {
-            self._type = .enum(try container.decode(EnumSchema.self))
-            return
-        } catch { errors.append(error) }
-
-        do {
-            self._type = .string(try container.decode(StringSchema.self))
-            return
-        } catch { errors.append(error) }
-
-        do {
-            self._type = .object(try container.decode(ObjectSchema.self))
-            return
-        } catch { errors.append(error) }
-
-        do {
-            self._type = .array(try container.decode(ArraySchema.self))
-            return
-        } catch { errors.append(error) }
-
-        do {
-            self._type = .integer(try container.decode(IntegerSchema.self))
-            return
-        } catch { errors.append(error) }
-
-        do {
-            self._type = .number(try container.decode(NumberSchema.self))
-            return
-        } catch { errors.append(error) }
-
-        do {
-            self._type = .boolean(try container.decode(BooleanSchema.self))
-            return
-        } catch { errors.append(error) }
-
-        do {
-            self._type = .null(try container.decode(NullSchema.self))
-            return
-        } catch { errors.append(error) }
-
-        do {
-            let booleanValue = try container.decode(Bool.self)
-            self._type = booleanValue ? .true : .false
-            return
-        } catch { errors.append(error) }
-
-        do {
-            self._type = .anyOf(try container.decode(AnyOfSchema.self))
-            return
-        } catch { errors.append(error) }
-
-        do {
-            self._type = .allOf(try container.decode(AllOfSchema.self))
-            return
-        } catch { errors.append(error) }
-
-        do {
-            self._type = .oneOf(try container.decode(OneOfSchema.self))
-            return
-        } catch { errors.append(error) }
-
-        do {
-            self._type = .not(try container.decode(NotSchema.self))
-            return
-        } catch { errors.append(error) }
-        throw DecodingError.dataCorruptedError(
-            in: container,
-            debugDescription:
-                "Unsupported JSON Schema type. Errors: \(errors.map { "\($0)" }.joined(separator: ", "))"
-        )
-    }
-
-    public func encode(to encoder: any Encoder) throws {
-        switch _type {
-        case .string(let schema): try schema.encode(to: encoder)
-        case .object(let schema): try schema.encode(to: encoder)
-        case .enum(let schema): try schema.encode(to: encoder)
-        case .array(let schema): try schema.encode(to: encoder)
-        case .integer(let schema): try schema.encode(to: encoder)
-        case .number(let schema): try schema.encode(to: encoder)
-        case .boolean(let schema): try schema.encode(to: encoder)
-        case .null(let schema): try schema.encode(to: encoder)
-        case .true:
-            var container = encoder.singleValueContainer()
-            try container.encode(true)
-        case .false:
-            var container = encoder.singleValueContainer()
-            try container.encode(false)
-        case .anyOf(let schema): try schema.encode(to: encoder)
-        case .allOf(let schema): try schema.encode(to: encoder)
-        case .oneOf(let schema): try schema.encode(to: encoder)
-        case .not(let schema): try schema.encode(to: encoder)
-        }
-    }
-
     /// Creates a string schema with optional constraints.
     public static func string(
         description: String? = nil,
@@ -426,8 +323,8 @@ public struct JSONSchema: Codable, Equatable, Sendable {
 
     /// Schema for string values with optional validation constraints.
     @JSONCodable
-    public struct StringSchema: Codable, Equatable, Sendable {
-        public enum _Type: String, Codable, Sendable, JSONDecodable, JSONEncodable {
+    public struct StringSchema: Equatable, Sendable {
+        public enum _Type: String, Sendable, JSONDecodable, JSONEncodable {
             case string = "string"
         }
 
@@ -454,8 +351,8 @@ public struct JSONSchema: Codable, Equatable, Sendable {
 
     /// Schema for object values with property definitions and validation rules.
     @JSONCodable
-    public struct ObjectSchema: Codable, Equatable, Sendable {
-        public enum _Type: String, Codable, Sendable, JSONDecodable, JSONEncodable {
+    public struct ObjectSchema: Equatable, Sendable {
+        public enum _Type: String, Sendable, JSONDecodable, JSONEncodable {
             case object = "object"
         }
         public var type: _Type = .object
@@ -481,7 +378,7 @@ public struct JSONSchema: Codable, Equatable, Sendable {
 
     /// Schema for enumerated values restricted to a specific set.
     @JSONCodable
-    public struct EnumSchema: Codable, Equatable, Sendable {
+    public struct EnumSchema: Equatable, Sendable {
         public var type: String?
         public var description: String?
         @JSONKey("enum")
@@ -496,18 +393,12 @@ public struct JSONSchema: Codable, Equatable, Sendable {
         public static func string(description: String? = nil, values: [String]) -> EnumSchema {
             return EnumSchema(type: "string", description: description, values: values)
         }
-
-        public enum CodingKeys: String, CodingKey {
-            case description
-            case values = "enum"
-            case type
-        }
     }
 
     /// Schema for array values with item type and validation constraints.
     @JSONCodable
-    public struct ArraySchema: Codable, Equatable, Sendable {
-        public enum _Type: String, Codable, Sendable, JSONDecodable, JSONEncodable {
+    public struct ArraySchema: Equatable, Sendable {
+        public enum _Type: String, Sendable, JSONDecodable, JSONEncodable {
             case array = "array"
         }
         public var type: _Type = .array
@@ -536,8 +427,8 @@ public struct JSONSchema: Codable, Equatable, Sendable {
 
     /// Schema for integer values with optional range constraints.
     @JSONCodable
-    public struct IntegerSchema: Codable, Equatable, Sendable {
-        public enum _Type: String, Codable, Sendable, JSONDecodable, JSONEncodable {
+    public struct IntegerSchema: Equatable, Sendable {
+        public enum _Type: String, Sendable, JSONDecodable, JSONEncodable {
             case integer = "integer"
         }
         public var type: _Type = .integer
@@ -555,8 +446,8 @@ public struct JSONSchema: Codable, Equatable, Sendable {
 
     /// Schema for numeric values (floating point) with optional range constraints.
     @JSONCodable
-    public struct NumberSchema: Codable, Equatable, Sendable {
-        public enum _Type: String, Codable, Sendable, JSONDecodable, JSONEncodable {
+    public struct NumberSchema: Equatable, Sendable {
+        public enum _Type: String, Sendable, JSONDecodable, JSONEncodable {
             case number = "number"
         }
         public var type: _Type = .number
@@ -579,8 +470,8 @@ public struct JSONSchema: Codable, Equatable, Sendable {
 
     /// Schema for boolean values.
     @JSONCodable
-    public struct BooleanSchema: Codable, Equatable, Sendable {
-        public enum _Type: String, Codable, Sendable, JSONDecodable, JSONEncodable {
+    public struct BooleanSchema: Equatable, Sendable {
+        public enum _Type: String, Sendable, JSONDecodable, JSONEncodable {
             case boolean = "boolean"
         }
         public var type: _Type = .boolean
@@ -597,8 +488,8 @@ public struct JSONSchema: Codable, Equatable, Sendable {
 
     /// Schema for null values.
     @JSONCodable
-    public struct NullSchema: Codable, Equatable, Sendable {
-        public enum _Type: String, Codable, Sendable, JSONDecodable, JSONEncodable {
+    public struct NullSchema: Equatable, Sendable {
+        public enum _Type: String, Sendable, JSONDecodable, JSONEncodable {
             case null = "null"
         }
         public var type: _Type = .null
@@ -615,7 +506,7 @@ public struct JSONSchema: Codable, Equatable, Sendable {
 
     /// Schema that matches if any of the provided schemas match.
     @JSONCodable
-    public struct AnyOfSchema: Codable, Equatable, Sendable {
+    public struct AnyOfSchema: Equatable, Sendable {
         public var anyOf: [JSONSchema]
 
         public init(anyOf: [JSONSchema]) { self.anyOf = anyOf }
@@ -623,7 +514,7 @@ public struct JSONSchema: Codable, Equatable, Sendable {
 
     /// Schema that matches only if all of the provided schemas match.
     @JSONCodable
-    public struct AllOfSchema: Codable, Equatable, Sendable {
+    public struct AllOfSchema: Equatable, Sendable {
         public var allOf: [JSONSchema]
 
         public init(allOf: [JSONSchema]) { self.allOf = allOf }
@@ -631,7 +522,7 @@ public struct JSONSchema: Codable, Equatable, Sendable {
 
     /// Schema that matches exactly one of the provided schemas.
     @JSONCodable
-    public struct OneOfSchema: Codable, Equatable, Sendable {
+    public struct OneOfSchema: Equatable, Sendable {
         public var oneOf: [JSONSchema]
 
         public init(oneOf: [JSONSchema]) { self.oneOf = oneOf }
@@ -639,7 +530,7 @@ public struct JSONSchema: Codable, Equatable, Sendable {
 
     /// Schema that inverts the matching logic of another schema.
     @JSONCodable
-    public struct NotSchema: Codable, Equatable, Sendable {
+    public struct NotSchema: Equatable, Sendable {
         public var not: JSONSchema
 
         public init(not: JSONSchema) { self.not = not }
@@ -737,8 +628,8 @@ private struct SchemaVisitor: JSONDecodingVisitor {
         var minLength: Int?
         var maxLength: Int?
         var pattern: String?
-        var minimum: JSONValue.Kind?
-        var maximum: JSONValue.Kind?
+        var minimum: JSONPrimitive?
+        var maximum: JSONPrimitive?
         var minItems: Int?
         var maxItems: Int?
         var uniqueItems: Bool?
@@ -793,9 +684,9 @@ private struct SchemaVisitor: JSONDecodingVisitor {
             case "pattern":
                 pattern = try valueDecoder.decode(String.self)
             case "minimum":
-                minimum = try JSONValue.Kind.decode(from: &valueDecoder)
+                minimum = try JSONPrimitive.decode(from: &valueDecoder)
             case "maximum":
-                maximum = try JSONValue.Kind.decode(from: &valueDecoder)
+                maximum = try JSONPrimitive.decode(from: &valueDecoder)
             case "minItems":
                 minItems = try valueDecoder.decode(Int.self)
             case "maxItems":
@@ -830,7 +721,7 @@ private struct SchemaVisitor: JSONDecodingVisitor {
                 notSchema = try JSONSchema.decode(from: &valueDecoder)
             default:
                 // Skip unknown keys
-                let _ = try valueDecoder.decodeAny(KindVisitor())
+                let _ = try JSONPrimitive.decode(from: &valueDecoder)
             }
             return false
         }
@@ -899,8 +790,8 @@ private struct SchemaVisitor: JSONDecodingVisitor {
         case "integer":
             var intMin: Int?
             var intMax: Int?
-            if case .integer(let v)? = minimum { intMin = v }
-            if case .integer(let v)? = maximum { intMax = v }
+            if case .number(let n)? = minimum { intMin = n.as(Int.self) }
+            if case .number(let n)? = maximum { intMax = n.as(Int.self) }
             return JSONSchema(
                 type: .integer(
                     .init(description: descriptionValue, minimum: intMin, maximum: intMax)
@@ -909,16 +800,8 @@ private struct SchemaVisitor: JSONDecodingVisitor {
         case "number":
             var dblMin: Double?
             var dblMax: Double?
-            if case .number(let v)? = minimum {
-                dblMin = v
-            } else if case .integer(let v)? = minimum {
-                dblMin = Double(v)
-            }
-            if case .number(let v)? = maximum {
-                dblMax = v
-            } else if case .integer(let v)? = maximum {
-                dblMax = Double(v)
-            }
+            if case .number(let n)? = minimum { dblMin = n.as(Double.self) }
+            if case .number(let n)? = maximum { dblMax = n.as(Double.self) }
             return JSONSchema(
                 type: .number(
                     .init(description: descriptionValue, minimum: dblMin, maximum: dblMax)

@@ -1,5 +1,5 @@
-import JSONMacros
 import JSONSchema
+import NewCodable
 import Testing
 
 #if canImport(FoundationEssentials)
@@ -10,7 +10,7 @@ import Testing
 
 struct JSONSchemaTests {
     @Test
-    func testEncoding() {
+    func testEncoding() throws {
         let schema: JSONSchema = .object(
             description: "My test object",
             properties: [
@@ -36,70 +36,35 @@ struct JSONSchemaTests {
             additionalProperties: .false
         )
 
-        let encoder = JSONEncoder()
+        let encoder = NewJSONEncoder()
+        let data = try encoder.encode(schema)
 
-        encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
-        let data = try! encoder.encode(schema)
-        let jsonString = String(decoding: data, as: UTF8.self)
-        #expect(
-            jsonString == """
-                {
-                  "additionalProperties" : false,
-                  "description" : "My test object",
-                  "properties" : {
-                    "array" : {
-                      "description" : "A test array",
-                      "items" : {
-                        "type" : "string"
-                      },
-                      "maxItems" : 5,
-                      "minItems" : 1,
-                      "type" : "array",
-                      "uniqueItems" : true
-                    },
-                    "enum" : {
-                      "description" : "An enum of values",
-                      "enum" : [
-                        "value1",
-                        5,
-                        "value3",
-                        null
-                      ]
-                    },
-                    "number" : {
-                      "description" : "A test number",
-                      "maximum" : 100,
-                      "minimum" : 0,
-                      "type" : "number"
-                    },
-                    "stringEnum" : {
-                      "description" : "A string enum",
-                      "enum" : [
-                        "value1",
-                        "value2",
-                        "value3"
-                      ],
-                      "type" : "string"
-                    },
-                    "test" : {
-                      "description" : "A test string",
-                      "maxLength" : 10,
-                      "minLength" : 1,
-                      "type" : "string"
-                    }
-                  },
-                  "required" : [
-                    "test",
-                    "number"
-                  ],
-                  "type" : "object"
-                }
-                """
-        )
+        // Decode it back to verify round-trip
+        let decoder = NewJSONDecoder()
+        let decoded = try decoder.decode(JSONSchema.self, from: data)
+        #expect(decoded.type == "object")
+        #expect(decoded.description == "My test object")
+        #expect(decoded.object?.properties["test"]?.type == "string")
+        #expect(decoded.object?.properties["test"]?.string?.minLength == 1)
+        #expect(decoded.object?.properties["test"]?.string?.maxLength == 10)
+        #expect(decoded.object?.properties["number"]?.type == "number")
+        #expect(decoded.object?.properties["number"]?.number?.minimum == 0)
+        #expect(decoded.object?.properties["number"]?.number?.maximum == 100)
+        #expect(decoded.object?.properties["array"]?.type == "array")
+        #expect(decoded.object?.properties["array"]?.array?.minItems == 1)
+        #expect(decoded.object?.properties["array"]?.array?.maxItems == 5)
+        #expect(decoded.object?.properties["array"]?.array?.uniqueItems == true)
+        #expect(decoded.object?.properties["array"]?.array?.items.type == "string")
+        #expect(decoded.object?.additionalProperties?.isFalse == true)
+        #expect(decoded.object?.required == ["test", "number"])
+        #expect(decoded.object?.properties["stringEnum"]?.type == "string")
+        #expect(decoded.object?.properties["stringEnum"]?.enum?.values.count == 3)
+        #expect(decoded.object?.properties["enum"]?.type == nil)
+        #expect(decoded.object?.properties["enum"]?.enum?.values.count == 4)
     }
 
     @Test
-    func testDecoding() async throws {
+    func testDecoding() throws {
         let jsonString = """
             {
               "additionalProperties" : false,
@@ -164,7 +129,7 @@ struct JSONSchemaTests {
             }
             """
 
-        let decoder = JSONDecoder()
+        let decoder = NewJSONDecoder()
         let schema = try decoder.decode(JSONSchema.self, from: Data(jsonString.utf8))
         #expect(schema.type == "object")
         #expect(schema.description == "My test object")
@@ -204,72 +169,8 @@ struct JSONSchemaTests {
         )
     }
 
-    // MARK: - New Codable Tests
-
     @Test
-    func testNewEncoding() throws {
-        let schema: JSONSchema = .object(
-            description: "Test object",
-            properties: [
-                "name": .string(description: "A name", minLength: 1),
-                "age": .integer(minimum: 0, maximum: 150),
-                "active": .boolean(),
-            ],
-            required: ["name"]
-        )
-
-        let encoder = NewJSONEncoder()
-        let data = try encoder.encode(schema)
-        let jsonString = String(decoding: data, as: UTF8.self)
-
-        // Decode it back to verify round-trip
-        let newDecoder = NewJSONDecoder()
-        let decoded = try newDecoder.decode(JSONSchema.self, from: data)
-        #expect(decoded.type == "object")
-        #expect(decoded.description == "Test object")
-        #expect(decoded.object?.properties["name"]?.type == "string")
-        #expect(decoded.object?.properties["name"]?.string?.minLength == 1)
-        #expect(decoded.object?.properties["age"]?.type == "integer")
-        #expect(decoded.object?.properties["age"]?.integer?.minimum == 0)
-        #expect(decoded.object?.properties["age"]?.integer?.maximum == 150)
-        #expect(decoded.object?.properties["active"]?.type == "boolean")
-        #expect(decoded.object?.required == ["name"])
-    }
-
-    @Test
-    func testNewDecoding() throws {
-        let jsonString = """
-            {
-              "type": "object",
-              "description": "A user",
-              "properties": {
-                "name": { "type": "string", "minLength": 1 },
-                "score": { "type": "number", "minimum": 0, "maximum": 100 },
-                "tags": { "type": "array", "items": { "type": "string" } },
-                "role": { "type": "string", "enum": ["admin", "user"] },
-                "status": { "oneOf": [{ "type": "string" }, { "type": "null" }] }
-              },
-              "required": ["name"]
-            }
-            """
-
-        let decoder = NewJSONDecoder()
-        let schema = try decoder.decode(JSONSchema.self, from: Data(jsonString.utf8))
-        #expect(schema.type == "object")
-        #expect(schema.description == "A user")
-        #expect(schema.object?.properties["name"]?.type == "string")
-        #expect(schema.object?.properties["name"]?.string?.minLength == 1)
-        #expect(schema.object?.properties["score"]?.type == "number")
-        #expect(schema.object?.properties["score"]?.number?.minimum == 0)
-        #expect(schema.object?.properties["score"]?.number?.maximum == 100)
-        #expect(schema.object?.properties["tags"]?.type == "array")
-        #expect(schema.object?.properties["tags"]?.array?.items.type == "string")
-        #expect(schema.object?.properties["status"]?.oneOf?.count == 2)
-        #expect(schema.object?.required == ["name"])
-    }
-
-    @Test
-    func testNewBooleanSchemas() throws {
+    func testBooleanSchemas() throws {
         let trueData = Data("true".utf8)
         let falseData = Data("false".utf8)
 
@@ -289,7 +190,7 @@ struct JSONSchemaTests {
     }
 
     @Test
-    func testNewEnumSchema() throws {
+    func testEnumSchema() throws {
         let jsonString = """
             {
               "description": "Colors",
@@ -310,7 +211,7 @@ struct JSONSchemaTests {
     }
 
     @Test
-    func testNewMixedEnumSchema() throws {
+    func testMixedEnumSchema() throws {
         let jsonString = """
             {
               "enum": ["value1", 5, "value3", null]
