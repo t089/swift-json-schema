@@ -1,13 +1,13 @@
 {
-  "originHash" : "63f92fea797d2ff57ca1636311350a0d6939808b3bfadc400320432728190df8",
+  "originHash" : "3954f8b8e9bbd6914d41c67b49758c7d19bf7cb6ebfd67436308e405f790728e",
   "pins" : [
     {
       "identity" : "swift-collections",
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/apple/swift-collections",
       "state" : {
-        "revision" : "8d9834a6189db730f6264db7556a7ffb751e99ee",
-        "version" : "1.4.0"
+        "revision" : "6675bc0ff86e61436e615df6fc5174e043e57924",
+        "version" : "1.4.1"
       }
     },
     {
@@ -16,7 +16,7 @@
       "location" : "https://github.com/apple/swift-foundation.git",
       "state" : {
         "branch" : "experimental/new-codable",
-        "revision" : "2d317090738c4cf675834bab7a90b083078edd27"
+        "revision" : "22163e387f2364383a610112875f8c7dbdbea99c"
       }
     },
     {
@@ -25,7 +25,7 @@
       "location" : "https://github.com/apple/swift-foundation-icu",
       "state" : {
         "branch" : "main",
-        "revision" : "a92f6aecbfdf4de9b7e18f1b63bf471e5a63a9c5"
+        "revision" : "f248868da88cc3241e50a49dc3761c80b60d4df3"
       }
     },
     {
@@ -34,7 +34,7 @@
       "location" : "https://github.com/swiftlang/swift-syntax",
       "state" : {
         "branch" : "main",
-        "revision" : "2afc46ddf6aa12411e38908652e50ce23fe124d4"
+        "revision" : "aacb56bc763b70e27d4f66d901365b45531f76bd"
       }
     }
   ],

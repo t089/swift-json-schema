@@ -322,7 +322,7 @@ public struct JSONSchema: Equatable, Sendable {
     // MARK: - Sub-schema types
 
     /// Schema for string values with optional validation constraints.
-    @JSONCodable
+    @JSONMacros.JSONCodable
     public struct StringSchema: Equatable, Sendable {
         public enum _Type: String, Sendable, JSONDecodable, JSONEncodable {
             case string = "string"
@@ -350,7 +350,7 @@ public struct JSONSchema: Equatable, Sendable {
     }
 
     /// Schema for object values with property definitions and validation rules.
-    @JSONCodable
+    @JSONMacros.JSONCodable
     public struct ObjectSchema: Equatable, Sendable {
         public enum _Type: String, Sendable, JSONDecodable, JSONEncodable {
             case object = "object"
@@ -377,11 +377,11 @@ public struct JSONSchema: Equatable, Sendable {
     }
 
     /// Schema for enumerated values restricted to a specific set.
-    @JSONCodable
+    @JSONMacros.JSONCodable
     public struct EnumSchema: Equatable, Sendable {
         public var type: String?
         public var description: String?
-        @JSONKey("enum")
+        @JSONMacros.JSONKey("enum")
         public var values: [JSONValue]
 
         public init(type: String? = nil, description: String? = nil, values: [any ConvertibleToJSONValue]) {
@@ -396,7 +396,7 @@ public struct JSONSchema: Equatable, Sendable {
     }
 
     /// Schema for array values with item type and validation constraints.
-    @JSONCodable
+    @JSONMacros.JSONCodable
     public struct ArraySchema: Equatable, Sendable {
         public enum _Type: String, Sendable, JSONDecodable, JSONEncodable {
             case array = "array"
@@ -426,7 +426,7 @@ public struct JSONSchema: Equatable, Sendable {
     }
 
     /// Schema for integer values with optional range constraints.
-    @JSONCodable
+    @JSONMacros.JSONCodable
     public struct IntegerSchema: Equatable, Sendable {
         public enum _Type: String, Sendable, JSONDecodable, JSONEncodable {
             case integer = "integer"
@@ -445,7 +445,7 @@ public struct JSONSchema: Equatable, Sendable {
     }
 
     /// Schema for numeric values (floating point) with optional range constraints.
-    @JSONCodable
+    @JSONMacros.JSONCodable
     public struct NumberSchema: Equatable, Sendable {
         public enum _Type: String, Sendable, JSONDecodable, JSONEncodable {
             case number = "number"
@@ -469,7 +469,7 @@ public struct JSONSchema: Equatable, Sendable {
     }
 
     /// Schema for boolean values.
-    @JSONCodable
+    @JSONMacros.JSONCodable
     public struct BooleanSchema: Equatable, Sendable {
         public enum _Type: String, Sendable, JSONDecodable, JSONEncodable {
             case boolean = "boolean"
@@ -487,7 +487,7 @@ public struct JSONSchema: Equatable, Sendable {
     }
 
     /// Schema for null values.
-    @JSONCodable
+    @JSONMacros.JSONCodable
     public struct NullSchema: Equatable, Sendable {
         public enum _Type: String, Sendable, JSONDecodable, JSONEncodable {
             case null = "null"
@@ -505,7 +505,7 @@ public struct JSONSchema: Equatable, Sendable {
     }
 
     /// Schema that matches if any of the provided schemas match.
-    @JSONCodable
+    @JSONMacros.JSONCodable
     public struct AnyOfSchema: Equatable, Sendable {
         public var anyOf: [JSONSchema]
 
@@ -513,7 +513,7 @@ public struct JSONSchema: Equatable, Sendable {
     }
 
     /// Schema that matches only if all of the provided schemas match.
-    @JSONCodable
+    @JSONMacros.JSONCodable
     public struct AllOfSchema: Equatable, Sendable {
         public var allOf: [JSONSchema]
 
@@ -521,7 +521,7 @@ public struct JSONSchema: Equatable, Sendable {
     }
 
     /// Schema that matches exactly one of the provided schemas.
-    @JSONCodable
+    @JSONMacros.JSONCodable
     public struct OneOfSchema: Equatable, Sendable {
         public var oneOf: [JSONSchema]
 
@@ -529,7 +529,7 @@ public struct JSONSchema: Equatable, Sendable {
     }
 
     /// Schema that inverts the matching logic of another schema.
-    @JSONCodable
+    @JSONMacros.JSONCodable
     public struct NotSchema: Equatable, Sendable {
         public var not: JSONSchema
 
