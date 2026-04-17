@@ -11,7 +11,8 @@ let package = Package(
             targets: ["JSONSchema"]),
     ],
     dependencies: [
-        .package(path: "../swift-json-macros"),
+        .package(url: "https://github.com/t089/swift-json-macros.git", branch: "new-codable"),
+        //.package(path: "../swift-json-macros"),
     ],
     targets: [
         .target(

@@ -1,5 +1,5 @@
 {
-  "originHash" : "3954f8b8e9bbd6914d41c67b49758c7d19bf7cb6ebfd67436308e405f790728e",
+  "originHash" : "7bc3fd29f2db745548d46d549695129d9cff0166e6d817576e95e6134ebd6749",
   "pins" : [
     {
       "identity" : "swift-collections",
@@ -26,6 +26,15 @@
       "state" : {
         "branch" : "main",
         "revision" : "f248868da88cc3241e50a49dc3761c80b60d4df3"
+      }
+    },
+    {
+      "identity" : "swift-json-macros",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/t089/swift-json-macros.git",
+      "state" : {
+        "branch" : "new-codable",
+        "revision" : "161ef6b897f1b142d598d9784d6f160b7f71792e"
       }
     },
     {
