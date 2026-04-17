@@ -381,7 +381,7 @@ public struct JSONSchema: Equatable, Sendable {
     public struct EnumSchema: Equatable, Sendable {
         public var type: String?
         public var description: String?
-        @JSONMacros.JSONKey("enum")
+        @JSONKey("enum")
         public var values: [JSONValue]
 
         public init(type: String? = nil, description: String? = nil, values: [any ConvertibleToJSONValue]) {
