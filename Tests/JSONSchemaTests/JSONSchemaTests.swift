@@ -227,4 +227,34 @@ struct JSONSchemaTests {
             ]
         )
     }
+
+    /// Equal object schemas must serialize to identical bytes: consumers use
+    /// the encoded schema inside prompt-cache prefixes, where any byte flip
+    /// (e.g. dictionary iteration order of `properties`) busts the cache.
+    @Test
+    func testObjectPropertiesEncodeInSortedKeyOrder() throws {
+        let encoder = NewJSONEncoder()
+        // Build the same schema with different insertion orders so the two
+        // dictionaries get different storage layouts.
+        let a: JSONSchema = .object(
+            properties: [
+                "text": .string(description: "The reminder text"),
+                "due_date": .string(description: "When to remind"),
+                "channel": .string(description: "Where to deliver"),
+            ]
+        )
+        let b: JSONSchema = .object(
+            properties: [
+                "channel": .string(description: "Where to deliver"),
+                "due_date": .string(description: "When to remind"),
+                "text": .string(description: "The reminder text"),
+            ]
+        )
+        let bytesA = try encoder.encode(a)
+        let bytesB = try encoder.encode(b)
+        #expect(bytesA == bytesB)
+        let json = String(decoding: bytesA, as: UTF8.self)
+        let order = ["channel", "due_date", "text"].compactMap { json.firstRange(of: "\"\($0)\"")?.lowerBound }
+        #expect(order == order.sorted(), "properties keys must appear in sorted order: \(json)")
+    }
 }
