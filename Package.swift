@@ -13,12 +13,14 @@ let package = Package(
     dependencies: [
         .package(url: "https://github.com/t089/swift-json-macros.git", branch: "new-codable"),
         //.package(path: "../swift-json-macros"),
+        .package(url: "https://github.com/apple/swift-collections.git", from: "1.1.0"),
     ],
     targets: [
         .target(
             name: "JSONSchema",
             dependencies: [
                 .product(name: "JSONMacros", package: "swift-json-macros"),
+                .product(name: "OrderedCollections", package: "swift-collections"),
             ]),
         .testTarget(
             name: "JSONSchemaTests",

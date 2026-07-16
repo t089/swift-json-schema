@@ -213,7 +213,7 @@ public struct JSONSchema: Equatable, Sendable {
     /// Creates an object schema with property definitions.
     public static func object(
         description: String? = nil,
-        properties: [String: JSONSchema],
+        properties: OrderedDictionary<String, JSONSchema>,
         required: [String]? = nil,
         additionalProperties: JSONSchema? = nil
     ) -> Self {
@@ -351,27 +351,26 @@ public struct JSONSchema: Equatable, Sendable {
 
     /// Schema for object values with property definitions and validation rules.
     ///
-    /// Encoding is hand-written (decode still comes from the macro): the
-    /// `properties` dictionary is emitted in sorted key order so that equal
-    /// schemas always produce identical bytes. Dictionary iteration order is
-    /// not stable across encodes, and consumers rely on byte-stable output
-    /// (e.g. LLM tool definitions, where the serialized schema is part of a
-    /// prompt-cache prefix).
-    @JSONMacros.JSONDecodable
-    public struct ObjectSchema: Equatable, Sendable, JSONEncodable {
+    /// `properties` is an `OrderedDictionary`: the declared key order is
+    /// preserved through encode and decode, so equal schemas always produce
+    /// identical bytes and round-trips keep the original document's order.
+    /// Consumers rely on byte-stable output (e.g. LLM tool definitions,
+    /// where the serialized schema is part of a prompt-cache prefix).
+    @JSONMacros.JSONCodable
+    public struct ObjectSchema: Equatable, Sendable {
         public enum _Type: String, Sendable, JSONDecodable, JSONEncodable {
             case object = "object"
         }
         public var type: _Type = .object
         public var description: String?
-        public var properties: [String: JSONSchema]
+        public var properties: OrderedDictionary<String, JSONSchema>
         public var required: [String]?
         public var additionalProperties: JSONSchema?
 
         public init(
             type: _Type = .object,
             description: String? = nil,
-            properties: [String: JSONSchema],
+            properties: OrderedDictionary<String, JSONSchema>,
             required: [String]? = nil,
             additionalProperties: JSONSchema? = nil
         ) {
@@ -380,33 +379,6 @@ public struct JSONSchema: Equatable, Sendable {
             self.properties = properties
             self.required = required
             self.additionalProperties = additionalProperties
-        }
-
-        // Field order matches what @JSONCodable used to generate
-        // (declaration order, nil optionals omitted); only the ordering
-        // inside `properties` is pinned down.
-        public func encode(to encoder: inout JSONDirectEncoder) throws(CodingError.Encoding) {
-            try encoder.encodeStructFields(count: nil) { structEncoder throws(CodingError.Encoding) in
-                try structEncoder.encode(key: "type", value: self.type)
-                if let value = self.description {
-                    try structEncoder.encode(key: "description", value: value)
-                }
-                try structEncoder.encode(key: "properties") {
-                    (valueEncoder: inout JSONDirectEncoder) throws(CodingError.Encoding) in
-                    try valueEncoder.encodeStructFields(count: self.properties.count) {
-                        propsEncoder throws(CodingError.Encoding) in
-                        for key in self.properties.keys.sorted() {
-                            try propsEncoder.encode(key: key, value: self.properties[key]!)
-                        }
-                    }
-                }
-                if let value = self.required {
-                    try structEncoder.encode(key: "required", value: value)
-                }
-                if let value = self.additionalProperties {
-                    try structEncoder.encode(key: "additionalProperties", value: value)
-                }
-            }
         }
     }
 
@@ -655,7 +627,7 @@ private struct SchemaVisitor: JSONDecodingVisitor {
         var typeValue: String?
         var descriptionValue: String?
         var enumValues: [JSONValue]?
-        var properties: [String: JSONSchema]?
+        var properties: OrderedDictionary<String, JSONSchema>?
         var required: [String]?
         var additionalProperties: JSONSchema?
         var items: JSONSchema?
@@ -688,17 +660,7 @@ private struct SchemaVisitor: JSONDecodingVisitor {
                     return vals
                 }
             case "properties":
-                properties = try valueDecoder.decodeStruct {
-                    structDecoder throws(CodingError.Decoding) in
-                    var props: [String: JSONSchema] = [:]
-                    try structDecoder.decodeEachKeyAndValue {
-                        propKey,
-                        propValueDecoder throws(CodingError.Decoding) -> Bool in
-                        props[propKey] = try JSONSchema.decode(from: &propValueDecoder)
-                        return false
-                    }
-                    return props
-                }
+                properties = try valueDecoder.decode(OrderedDictionary<String, JSONSchema>.self)
             case "required":
                 required = try valueDecoder.decodeArray { arrayDecoder throws(CodingError.Decoding) in
                     var reqs: [String] = []
